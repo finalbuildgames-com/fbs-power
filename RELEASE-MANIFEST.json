@@ -1,0 +1,12 @@
+{
+  "module": "power",
+  "source_commit": "71c93f0178003eb557290a63519bc8507538eb5b",
+  "source_files": [
+    "src/power.c",
+    "include/fbs/power.h",
+    "tests/test_power.c",
+    "tests/fixtures/power/allocations.txt",
+    "tests/fixtures/power/grid.bin"
+  ],
+  "history": "fresh initial commit, later squashed snapshots"
+}
