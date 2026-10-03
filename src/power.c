@@ -2,13 +2,14 @@
  * src/power.c — FinalBuildSystems power / resource networks. Implements
  * include/fbs/power.h (v0.1.0, frozen; this file never edits it).
  *
- * Original work. Nothing is ported, wrapped or vendored: per
- * docs/decisions/power.md §10 the owned Fab pack ("Base Building and Power
- * Grids", Blueprint only, Fab Standard Licence) is a *specification input
- * only* — read for research, no line of it ships, and none of the GPL/AGPL/
- * LGPL games read as semantic references (Mindustry, /tg/station, technic)
- * contributed code. The pack's structural defects P1–P7 (§3 of the decision)
- * are fixed structurally here, not copied:
+ * Original work. Nothing is ported, wrapped or vendored: the owned Fab pack
+ * ("Base Building and Power Grids", Blueprint only, Fab Standard Licence) is
+ * a *specification input only* — read for research, no line of it ships, and
+ * none of the GPL/AGPL/LGPL games read as semantic references (Mindustry,
+ * /tg/station, technic) contributed code. Only the pack's shape (a node
+ * carries both numbers, a network is a first-class object, placement lives
+ * outside the model) is carried over. The pack's structural defects P1 to P7,
+ * found when its Blueprint graphs were read, are fixed here, not copied:
  *
  *   P1 non-conservation  -> both sides are summed with overflow detection and
  *                           `production + discharged == consumed + charged +
@@ -108,8 +109,8 @@
  * FBS_POWER_E_STATE is never returned by this file, and cannot be: the frozen
  * 0.1.0 contract has no callbacks, so there is no way to be inside a tick when
  * a mutator is called. The header already calls the code "reserved for
- * lifecycle misuse"; docs/decisions/power.md §6.2 item 6 describes the case it
- * is reserved for, which arrives only if callbacks ever do.
+ * lifecycle misuse": a callback that mutated the context during a tick would
+ * get it, so it matters only if callbacks are ever added.
  *
  * LIST OUTPUTS. The header's opening paragraph is the house rule — "errors
  * leave outputs untouched except FBS_POWER_E_TRUNCATED (required count
@@ -118,7 +119,7 @@
  * sentence on fbs_power_network_list that reads "writes min(cap, count) ids" is
  * a description of the success path, where min(cap, count) is count; a partial
  * prefix write would contradict both the opening paragraph and every other
- * module in this repository (fbs_inv_list_items, fbs_faction_edges, …).
+ * FinalBuildSystems module (fbs_inv_list_items, fbs_faction_edges, …).
  *
  * ARITHMETIC. Every apportionment is floor + largest remainder with ties broken
  * by ascending node index, and the products involved (weight * total) do not
@@ -133,8 +134,13 @@
  * exist by stamping each node's neighbours. Neither is a scan per edge, so a
  * four-thousand-node save loads in about a millisecond rather than seconds.
  *
- * SCHEMA. docs/decisions/power.md §6.1, magic "FBSPWR\0\0", version
- * FBS_POWER_VERSION, little-endian, field by field, no padding. Networks,
+ * SCHEMA. Magic "FBSPWR\0\0", uint32 version (FBS_POWER_VERSION), uint32
+ * policy, uint32 node_count, uint32 edge_count; then one 48-byte record per
+ * live node in ascending index order (uint32 handle, int64 production, demand,
+ * capacity, stored, uint32 priority, uint64 tag); then one 12-byte record per
+ * live edge in ascending index order (uint32 handle, uint32 endpoint a,
+ * uint32 endpoint b); then a uint32 crc32 over everything before it. All
+ * little-endian, field by field, no padding. Networks,
  * per-network tick statistics and per-node allocations are *not* stored: they
  * are derived, and the loader rebuilds networks with the same BFS the runtime
  * uses. The crc32 is the standard CRC-32/ISO-HDLC (reflected polynomial
@@ -252,7 +258,8 @@ static int64_t pwr_gcd(int64_t a, int64_t b) {
  * share shares almost no factor with it — the value is reported at the largest
  * representable denominator instead, rounded down, so it never overstates
  * satisfaction. That fallback is the single inexact number this library can
- * produce and is recorded in docs/lanes/power-impl.md. */
+ * produce; exactness at every scale would need int64 fields in a later
+ * version. */
 static void pwr_satisfaction(int64_t consumed, int64_t demand, uint32_t *num, uint32_t *den) {
   int64_t g, n, d;
   if (demand <= 0) {
@@ -1588,7 +1595,7 @@ fbs_power_status fbs_power_tick_network(fbs_power_context *ctx, fbs_power_networ
 }
 
 /* ------------------------------------------------------------------------- */
-/* Serialization (docs/decisions/power.md §6.1)                              */
+/* Serialization (layout in the SCHEMA note at the top of this file)         */
 /* ------------------------------------------------------------------------- */
 
 size_t fbs_power_serialized_size(const fbs_power_context *ctx) {

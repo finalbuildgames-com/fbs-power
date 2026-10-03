@@ -13,7 +13,7 @@
  *
  * Units are caller-defined integers ("energy units per tick"). Nothing is
  * floating point anywhere in the library, so a tick is bit-identical on every
- * platform and in WASM. Decision record: docs/decisions/power.md section 10.
+ * platform and in WASM.
  * Out of scope for 0.1.0: geometry/placement, per-edge capacity or loss,
  * power channels, callbacks during a tick, a resource/build ledger.
  * Errors leave outputs untouched except FBS_POWER_E_TRUNCATED (required count
@@ -239,7 +239,7 @@ fbs_power_status fbs_power_node_allocation(const fbs_power_context *ctx,
                                            fbs_power_node n, int64_t *out_allocated);
 
 /* ------------------------------------------------------------------------ */
-/* Serialization (schema in docs/decisions/power.md §6.1)                    */
+/* Serialization (byte layout described in src/power.c, SCHEMA)            */
 /* ------------------------------------------------------------------------ */
 
 size_t fbs_power_serialized_size(const fbs_power_context *ctx);

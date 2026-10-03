@@ -4,17 +4,16 @@
  * Self-contained: no test framework. Exit code = number of failures (clamped
  * to 100 so it survives the 8-bit exit status; the true count is printed).
  *
- * Covers docs/decisions/power.md §7 items 1..11 with the exact witnesses
- * stated there — every one of them is the negative test for one of the pack's
- * structural bugs P1..P7 recorded in §3 — plus NULL/bad-enum validation and
- * 0xA5 output-untouched checks on every entry point, every E_TRUNCATED path,
- * config validation, the status-name/version functions and two committed
- * golden fixtures.
+ * Covers test plan items §7.1 to §7.11 below, each with an exact witness;
+ * every one of them is the negative test for one of the reference pack's
+ * structural bugs P1..P7 (listed at the top of src/power.c), plus
+ * NULL/bad-enum validation and 0xA5 output-untouched checks on every entry
+ * point, every E_TRUNCATED path, config validation, the status-name/version
+ * functions and two committed golden fixtures.
  *
- * §7 item 12's cross-platform half ("run native and under WASM and compare")
- * is out of scope for this C binary: this repository builds WASM only for the
- * trace module (integrations/wasm/build-trace.sh), and the decision's §10 says
- * the fixture on native satisfies the milestone. The golden files below are
+ * Plan item §7.12's cross-platform half ("run native and under WASM and
+ * compare") is out of scope for this C binary: no WASM build is set up here,
+ * and the golden fixtures byte-compared on native stand in for it. They are
  * exactly the artifacts a WASM replay would be compared against byte for byte.
  *
  *   ./fbs_test_power                      compare against the committed fixtures
@@ -59,7 +58,7 @@ static int untouched(const void *p, size_t n, unsigned char fill) {
   return 1;
 }
 
-/* Deterministic 32-bit xorshift; no rand() anywhere (§7 item 4 requires a
+/* Deterministic 32-bit xorshift; no rand() anywhere (§7.4 requires a
  * fixed, documented seed). */
 typedef struct {
   uint32_t state;
@@ -203,7 +202,7 @@ static int64_t stored_of(fbs_power_context *ctx, fbs_power_node n) {
   return d.stored;
 }
 
-/* Membership as the sorted node-index list §7 items 1..3 ask for. */
+/* Membership as the sorted node-index list §7.1 to §7.3 ask for. */
 static size_t members_of(fbs_power_context *ctx, fbs_power_network net, uint32_t *out, size_t cap) {
   fbs_power_node buf[64];
   size_t count = 0u, i;
@@ -1376,8 +1375,8 @@ static void test_round_trip(void) {
   CHECK(fbs_power_network_count(back) == 3u);
   same_membership(ctx, back, h, RICH_NODES);
 
-  /* The blob carries no derived tick results, so the assertion the decision
-     asks for is that the *next* tick agrees: same stats, same allocations,
+  /* The blob carries no derived tick results, so the assertion made here
+     is that the *next* tick agrees: same stats, same allocations,
      same bytes afterwards. */
   CHECK(fbs_power_tick(ctx) == FBS_POWER_OK);
   CHECK(fbs_power_tick(back) == FBS_POWER_OK);
