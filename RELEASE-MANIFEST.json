@@ -1,12 +1,13 @@
 {
   "module": "power",
-  "source_commit": "71c93f0178003eb557290a63519bc8507538eb5b",
+  "source_commit": "cd0f7ae445d7ccad81b9d6b601d088b66ae6d061",
   "source_files": [
     "src/power.c",
     "include/fbs/power.h",
     "tests/test_power.c",
     "tests/fixtures/power/allocations.txt",
-    "tests/fixtures/power/grid.bin"
+    "tests/fixtures/power/grid.bin",
+    "tools/release/readmes/power.md"
   ],
   "history": "fresh initial commit, later squashed snapshots"
 }
