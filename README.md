@@ -93,12 +93,16 @@ The battery covers the 15-unit gap for four ticks (lamp 25/25, battery 45, 30, 1
 
 ## Build and test
 
+Run from this repository's root. In addition to CMake and the compiler named
+below, install the build tool selected by your generator (for example Make or
+Ninja).
+
 Requires CMake 3.16+ and a C99 compiler. No other dependency; the library uses only the C standard library (no libm, though the CMake target links `m` on non-MSVC toolchains). No third-party code is vendored.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
-cmake --build build --parallel 2
-ctest --test-dir build --output-on-failure --no-tests=error
+cmake --build build --parallel 1
+(cd build && ctest --output-on-failure)
 ```
 
 CMake options: `FBS_BUILD_TESTS` and `FBS_BUILD_EXAMPLES` (both `ON`). This registers two tests: `power` runs `tests/test_power.c`, and `power_example` runs `fbs_power_example`, built from `examples/basic.c`, which creates and destroys a context and prints the API version.
@@ -124,6 +128,26 @@ target_link_libraries(your_target PRIVATE fbs::power)
 ```
 
 Engine adapters: none. This repository ships the C library only.
+
+## Build modes and installation
+
+`BUILD_SHARED_LIBS=ON` builds a shared library; the default is static.
+`FBS_BUILD_TESTS` and `BUILD_TESTING` together enable the core test.
+`FBS_BUILD_EXAMPLES` controls `fbs_power_example`; its CTest entry also requires
+`BUILD_TESTING`. For a library-only build, set `FBS_BUILD_TESTS=OFF` and
+`FBS_BUILD_EXAMPLES=OFF`.
+
+```sh
+cmake --install build --prefix "$PWD/install"
+```
+
+Installation supplies [the public header](include/fbs/power.h), the library,
+license notices and `FinalBuildPowerTargets.cmake` under
+`${CMAKE_INSTALL_LIBDIR}/cmake/FinalBuildPower`. It supplies no package config or
+version config, so `find_package(FinalBuildPower)` is unavailable. A consumer may
+include the installed targets file explicitly and link `fbs::power`, or use
+the source integration above. The [minimal program](examples/basic.c) and
+[core tests](tests/test_power.c) show the implemented entry points.
 
 ## Design notes
 
